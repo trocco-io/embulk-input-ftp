@@ -1,41 +1,5 @@
 package org.embulk.input.ftp;
 
-import it.sauronsoftware.ftp4j.FTPAbortedException;
-import it.sauronsoftware.ftp4j.FTPClient;
-import it.sauronsoftware.ftp4j.FTPCommunicationListener;
-import it.sauronsoftware.ftp4j.FTPConnector;
-import it.sauronsoftware.ftp4j.FTPDataTransferException;
-import it.sauronsoftware.ftp4j.FTPDataTransferListener;
-import it.sauronsoftware.ftp4j.FTPException;
-import it.sauronsoftware.ftp4j.FTPFile;
-import it.sauronsoftware.ftp4j.FTPIllegalReplyException;
-import it.sauronsoftware.ftp4j.FTPListParseException;
-
-import org.embulk.config.ConfigDiff;
-import org.embulk.config.ConfigSource;
-import org.embulk.config.TaskReport;
-import org.embulk.config.TaskSource;
-import org.embulk.spi.BufferAllocator;
-import org.embulk.spi.Exec;
-import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.TransactionalFileInput;
-import org.embulk.util.config.Config;
-import org.embulk.util.config.ConfigDefault;
-import org.embulk.util.config.ConfigMapper;
-import org.embulk.util.config.ConfigMapperFactory;
-import org.embulk.util.config.Task;
-import org.embulk.util.config.TaskMapper;
-import org.embulk.util.file.InputStreamFileInput;
-import org.embulk.util.file.InputStreamFileInput.InputStreamWithHints;
-import org.embulk.util.file.ResumableInputStream;
-import org.embulk.util.ssl.SSLPlugins;
-import org.embulk.util.ssl.SSLPlugins.SSLPluginConfig;
-import org.embulk.util.retryhelper.RetryExecutor;
-import org.embulk.util.retryhelper.RetryGiveupException;
-import org.embulk.util.retryhelper.Retryable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -52,6 +16,42 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+
+import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigException;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskReport;
+import org.embulk.config.TaskSource;
+import org.embulk.spi.Exec;
+import org.embulk.spi.FileInputPlugin;
+import org.embulk.spi.TransactionalFileInput;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
+import org.embulk.util.config.ConfigMapper;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.Task;
+import org.embulk.util.config.TaskMapper;
+import org.embulk.util.file.InputStreamFileInput;
+import org.embulk.util.file.InputStreamFileInput.InputStreamWithHints;
+import org.embulk.util.file.ResumableInputStream;
+import org.embulk.util.retryhelper.RetryExecutor;
+import org.embulk.util.retryhelper.RetryGiveupException;
+import org.embulk.util.retryhelper.Retryable;
+import org.embulk.util.ssl.SSLPlugins;
+import org.embulk.util.ssl.SSLPlugins.SSLPluginConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import it.sauronsoftware.ftp4j.FTPAbortedException;
+import it.sauronsoftware.ftp4j.FTPClient;
+import it.sauronsoftware.ftp4j.FTPCommunicationListener;
+import it.sauronsoftware.ftp4j.FTPConnector;
+import it.sauronsoftware.ftp4j.FTPDataTransferException;
+import it.sauronsoftware.ftp4j.FTPDataTransferListener;
+import it.sauronsoftware.ftp4j.FTPException;
+import it.sauronsoftware.ftp4j.FTPFile;
+import it.sauronsoftware.ftp4j.FTPIllegalReplyException;
+import it.sauronsoftware.ftp4j.FTPListParseException;
 
 public class FtpFileInputPlugin
         implements FileInputPlugin
@@ -111,6 +111,10 @@ public class FtpFileInputPlugin
         @Config("ssl_explicit")
         @ConfigDefault("true")
         boolean getSslExplicit();
+
+        @Config("stop_when_file_not_found")
+        @ConfigDefault("false")
+        boolean getStopWhenFileNotFound();
 
         List<String> getFiles();
         void setFiles(List<String> files);
@@ -292,7 +296,12 @@ public class FtpFileInputPlugin
     {
         final FTPClient client = newFTPClient(log, task);
         try {
-            return listFilesByPrefix(log, client, task.getPathPrefix(), task.getLastPath(), pathMatchPattern);
+            List<String> files = listFilesByPrefix(log, client, task.getPathPrefix(), task.getLastPath(), pathMatchPattern);
+            if (files.isEmpty() && task.getStopWhenFileNotFound()) {
+                throw new ConfigException("No file is found. \"stop_when_file_not_found\" option is \"true\".");
+            }
+
+            return files;
         }
         finally {
             disconnectClient(client);
