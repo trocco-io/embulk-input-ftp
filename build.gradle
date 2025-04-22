@@ -4,18 +4,23 @@ plugins {
     id "signing"
     id "checkstyle"
     id "org.embulk.embulk-plugins" version "0.5.2"
+    id "com.palantir.git-version" version "3.0.0"
 }
 
 repositories {
     mavenCentral()
-
-    // Tests need EmbulkTestRuntime. EmbulkTestRuntime needs old-style embulk-standards till 0.10.28. 0.10.28 needs jcenter.
-    // Tests call FileInputRunner directly. FileInputRunner needs old-style plugin architecture like 0.10.19. 0.10.19 needs jcenter.
-    jcenter()
 }
 
-group = "org.embulk"
-version = "0.4.0-SNAPSHOT"
+group = "trocco-io"
+version = {
+    def vd = versionDetails()
+    if (vd.commitDistance == 0 && vd.lastTag ==~ /^v?[0-9]+\.[0-9]+\.[0-9]+([.-][.a-zA-Z0-9-]+)?/) {
+        vd.lastTag.replaceFirst(/^v/, "")
+    } else {
+        "0.0.0.${vd.gitHash}"
+    }
+}()
+
 description = "Reads files stored on a FTP server."
 
 sourceCompatibility = 1.8
@@ -61,10 +66,10 @@ dependencies {
     compile "org.embulk:embulk-util-retryhelper:0.8.2"
 
     testCompile "junit:junit:4.13.2"
-    testCompile "org.embulk:embulk-core:0.10.19"
-    testCompile "org.embulk:embulk-core:0.10.19:tests"
-    testCompile "org.embulk:embulk-standards:0.10.19"
-    testCompile "org.embulk:embulk-deps:0.10.19"
+    testCompile "org.embulk:embulk-core:0.10.31"
+    testCompile "org.embulk:embulk-core:0.10.31:tests"
+    // testCompile "org.embulk:embulk-standards:0.10.19"
+    testCompile "org.embulk:embulk-deps:0.10.31"
 }
 
 embulkPlugin {
