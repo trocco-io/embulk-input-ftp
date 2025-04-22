@@ -15,16 +15,16 @@ jobs:
           cache: 'gradle'
 
       - name: Start FTP test server
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Show running containers
-        run: docker-compose ps
+        run: docker compose ps
 
       - name: Wait for FTP server to be ready
         run: |
           timeout=30
           counter=0
-          until docker-compose exec -T ftp-server nc -z localhost 21 || [ $counter -eq $timeout ]; do
+          until docker compose exec -T ftp-server nc -z localhost 21 || [ $counter -eq $timeout ]; do
             echo "Waiting for FTP server to be ready... ($counter/$timeout)"
             counter=$((counter+1))
             sleep 1
@@ -32,7 +32,7 @@ jobs:
 
           if [ $counter -eq $timeout ]; then
             echo "FTP server did not start in time!"
-            docker-compose logs
+            docker compose logs
             exit 1
           fi
 
