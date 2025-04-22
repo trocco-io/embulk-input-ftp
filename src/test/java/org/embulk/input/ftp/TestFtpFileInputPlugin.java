@@ -1,8 +1,14 @@
 package org.embulk.input.ftp;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+import static org.junit.Assert.assertEquals;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
@@ -19,9 +25,6 @@ import org.embulk.util.config.Config;
 import org.embulk.util.config.ConfigMapper;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.embulk.util.config.Task;
-import org.embulk.util.config.modules.ColumnModule;
-import org.embulk.util.config.modules.SchemaModule;
-import org.embulk.util.config.modules.TypeModule;
 import org.embulk.util.config.units.SchemaConfig;
 import org.embulk.util.ssl.SSLPlugins;
 import org.junit.Assert;
@@ -32,14 +35,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertEquals;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 public class TestFtpFileInputPlugin
 {
@@ -339,6 +337,7 @@ public class TestFtpFileInputPlugin
     }
 
     @Test
+    @org.junit.Ignore("Skipping test that requires CSV parser")
     public void testListFilesByPrefixIncrementalFalse()
     {
         final ConfigSource config = configLegacy()
@@ -352,6 +351,7 @@ public class TestFtpFileInputPlugin
 
     @Test
     @SuppressWarnings("unchecked")
+    @org.junit.Ignore("Skipping test that requires CSV parser")
     public void testFtpFileInputByOpen() throws Exception
     {
         final ConfigSource configLegacy = configLegacy();

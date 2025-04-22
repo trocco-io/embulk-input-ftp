@@ -37,8 +37,8 @@ java {
 }
 
 dependencies {
-    compileOnly "org.embulk:embulk-api:0.10.19"
-    compileOnly "org.embulk:embulk-spi:0.10.19"
+    compileOnly "org.embulk:embulk-api:0.10.31"
+    compileOnly "org.embulk:embulk-spi:0.10.31"
 
     compile("org.embulk:embulk-util-config:0.3.1") {
         // They conflict with embulk-core. They are once excluded here,
@@ -68,7 +68,6 @@ dependencies {
     testCompile "junit:junit:4.13.2"
     testCompile "org.embulk:embulk-core:0.10.31"
     testCompile "org.embulk:embulk-core:0.10.31:tests"
-    // testCompile "org.embulk:embulk-standards:0.10.19"
     testCompile "org.embulk:embulk-deps:0.10.31"
 }
 
