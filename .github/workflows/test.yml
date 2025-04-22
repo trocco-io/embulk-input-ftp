@@ -17,27 +17,6 @@ jobs:
       - name: Start FTP test server
         run: docker compose up -d
 
-      - name: Show running containers
-        run: docker compose ps
-
-      - name: Wait for FTP server to be ready
-        run: |
-          timeout=30
-          counter=0
-          until docker exec embulk-input-ftp_server nc -z localhost 21 2>/dev/null || [ $counter -eq $timeout ]; do
-            echo "Waiting for FTP server to be ready... ($counter/$timeout)"
-            counter=$((counter+1))
-            sleep 1
-          done
-
-          if [ $counter -eq $timeout ]; then
-            echo "FTP server did not start in time!"
-            docker compose logs
-            exit 1
-          fi
-
-          echo "FTP server is ready!"
-
       - name: Check
         run: ./gradlew check --stacktrace --info
       - uses: actions/upload-artifact@v4
