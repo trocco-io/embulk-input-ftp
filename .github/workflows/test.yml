@@ -24,7 +24,7 @@ jobs:
         run: |
           timeout=30
           counter=0
-          until docker compose exec -T ftp-server nc -z localhost 21 || [ $counter -eq $timeout ]; do
+          until docker exec embulk-input-ftp_server nc -z localhost 21 2>/dev/null || [ $counter -eq $timeout ]; do
             echo "Waiting for FTP server to be ready... ($counter/$timeout)"
             counter=$((counter+1))
             sleep 1
@@ -38,19 +38,11 @@ jobs:
 
           echo "FTP server is ready!"
 
-      - name: Run Gradle check with tests
+      - name: Check
         run: ./gradlew check --stacktrace --info
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: test-reports
-          path: |
-            build/reports/tests/test/
-            build/reports/checkstyle/
-          retention-days: 7
+          name: tests
+          path: ./build/reports/tests/test
 
-      - name: Build with Gradle
-        if: success()
-        run: ./gradlew build
