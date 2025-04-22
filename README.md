@@ -29,6 +29,7 @@ embulk-input-ftp v0.2.0+ requires Embulk v0.9.12+
 - **ssl_verify_hostname**: verify server's hostname matches with provided certificate. (boolean, default: true)
 - **ssl_trusted_ca_cert_file**: if the server certification is not signed by a certificate authority, set path to the X.508 certification file (pem file) of a private CA (string, optional)
 - **ssl_trusted_ca_cert_data**: similar to `ssl_trusted_ca_cert_file` but embed the contents of the PEM file as a string value instead of path to a local file (string, optional)
+- **stop_when_file_not_found**: if true, check existence of files (boolean, default false)
 
 ### FTP / FTPS default port number
 
@@ -123,7 +124,7 @@ Creating network "embulk-input-ftp_default" with the default driver
 Creating embulk-input-ftp_server ... done
 
 $ docker-compose ps
-         Name              Command     State                       Ports                           
+         Name              Command     State                       Ports
 ---------------------------------------------------------------------------------------------------
 embulk-input-ftp_server   /start-ftp   Up      0.0.0.0:11021->21/tcp, 0.0.0.0:65000->65000/tcp, ...
 

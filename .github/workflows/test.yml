@@ -4,17 +4,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up JDK 8
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
-          java-version: 8
-          distribution: "zulu"
-      - run: docker-compose up -d
-      - run: docker-compose ps
+          distribution: 'zulu'
+          java-version: '8'
+          cache: 'gradle'
+
+      - name: Start FTP test server
+        run: docker compose up -d
+
       - name: Check
         run: ./gradlew check --stacktrace --info
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: tests
