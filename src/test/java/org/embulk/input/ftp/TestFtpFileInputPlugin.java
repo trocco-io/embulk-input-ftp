@@ -1,7 +1,9 @@
 package org.embulk.input.ftp;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +13,7 @@ import java.util.regex.Pattern;
 
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
@@ -370,6 +373,40 @@ public class TestFtpFileInputPlugin
 
         assertRecords(config, output);
     }
+
+@Test
+@SuppressWarnings("unchecked")
+public void testListFilesStopWhenFileNotFound_Ftp() throws Exception
+{
+    final String pattern = "\\.xml$";
+    final Pattern pathMatchPattern = Pattern.compile(pattern);
+
+    final ConfigSource config = config();
+    config.set("path_match_pattern", pattern);
+    config.set("stop_when_file_not_found", true);
+    config.set("path_prefix", FTP_TEST_PATH_PREFIX + "sample_01.csv");
+
+    final ConfigMapper configMapper = CONFIG_MAPPER_FACTORY.createConfigMapper();
+    final PluginTask task = configMapper.map(config, PluginTask.class);
+
+    final Method method = FtpFileInputPlugin.class.getDeclaredMethod("listFiles", Logger.class, PluginTask.class, Pattern.class);
+    method.setAccessible(true);
+    final Logger logger = LoggerFactory.getLogger(FtpFileInputPlugin.class);
+
+    try {
+        method.invoke(plugin, logger, task, pathMatchPattern);
+        fail("Expected ConfigException to be thrown");
+    } catch (InvocationTargetException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof ConfigException) {
+            String expected = "No file is found. \"stop_when_file_not_found\" option is \"true\".";
+            assertEquals(expected, cause.getMessage());
+        } else {
+            throw e;
+        }
+    }
+}
+
 
     private static List<TaskReport> emptyTaskReports(final int taskCount)
     {
